@@ -6,10 +6,17 @@ class KittiOdometryDataset(Dataset):
     def __init__(self, config: str):
         super(KittiOdometryDataset, self).__init__()
         base_path = Path(config['base_path'])
-
+        if ('sequences' in config) and (config["sequences"]):
+            sequences = config['sequences']
+        else:
+            search_path = base_path / 'sequences'
+            print(f"WARNING: No sequences given.")
+            sequences = [str(folder.name) for folder in search_path.iterdir() if folder.is_dir()]
+            assert sequences, f"No sequences found in '{search_path}'"
+        
         self._sequences = []
         self._sequence_intervals = []
-        for sequence in config['sequences']:
+        for sequence in sequences:
             self._sequences.append(odometry(base_path, sequence=sequence))
             next_interval = len(self._sequences[-1]) if not self._sequence_intervals else self._sequence_intervals[-1] + len(self._sequences[-1])
             self._sequence_intervals.append(next_interval)
